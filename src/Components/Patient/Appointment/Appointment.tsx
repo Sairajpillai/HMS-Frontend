@@ -1,0 +1,388 @@
+import {
+  ActionIcon,
+  Button,
+  LoadingOverlay,
+  Modal,
+  Select,
+  Text,
+  Textarea,
+  TextInput,
+} from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { IconEdit, IconPlus, IconSearch, IconTrash } from "@tabler/icons-react";
+import { FilterMatchMode, FilterOperator } from "primereact/api";
+// import { Button } from "primereact/button";
+import { DateTimePicker } from "@mantine/dates";
+import { useForm } from "@mantine/form";
+import { modals } from "@mantine/modals";
+import { Column } from "primereact/column";
+import { DataTable, DataTableFilterMeta } from "primereact/datatable";
+import 'primereact/resources/themes/lara-light-blue/theme.css';
+import { Tag } from "primereact/tag";
+import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import {
+  cancelAppointment,
+  getAppointmentsByPatient,
+  scheduleAppointment,
+} from "../../../Service/AppointmentService";
+import { getDoctorDropdown } from "../../../Service/DoctorProfileService";
+import { formatDateWithTime } from "../../../Utility/DateUtility";
+import {
+  errorNotification,
+  successNotification,
+} from "../../../Utility/NotificationUtil";
+import { appointmentReasons } from "../../Data/DropDown";
+
+interface Country {
+  name: string;
+  code: string;
+}
+
+interface Representative {
+  name: string;
+  image: string;
+}
+
+interface Customer {
+  id: number;
+  name: string;
+  country: Country;
+  company: string;
+  date: string | Date;
+  status: string;
+  verified: boolean;
+  activity: number;
+  representative: Representative;
+  balance: number;
+}
+
+const Appointment = () => {
+  const [opened, { close, open }] = useDisclosure(false);
+  const user = useSelector((state: any) => state.user);
+  const [loading, setLoading] = useState(false);
+  const [doctors, setDoctors] = useState<any[]>([]);
+  const [appointments, setAppointments] = useState<any[]>([]);
+  const [selectedCustomers, setSelectedCustomers] = useState<Customer[]>([]);
+  const [filters, setFilters] = useState<DataTableFilterMeta>({
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    doctorName: {
+      operator: FilterOperator.AND,
+      constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }],
+    },
+    reason: {
+      operator: FilterOperator.AND,
+      constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }],
+    },
+    status: { value: null, matchMode: FilterMatchMode.IN },
+    notes: {
+      operator: FilterOperator.AND,
+      constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }],
+    },
+    
+  });
+  const [globalFilterValue, setGlobalFilterValue] = useState<string>("");
+
+  const getSeverity = (status: string) => {
+    switch (status) {
+      case "CANCELED":
+        return "danger";
+
+      case "COMPLETED":
+        return "success";
+
+      case "SCHEDULED":
+        return "info";
+
+      default:
+        return null;
+    }
+  };
+
+  useEffect(() => {
+    // CustomerService.getCustomersLarge().then((data) => setCustomers(getCustomers(data)));
+
+    getAppointmentsByPatient(user.profileId)
+      .then((data) => {
+        console.log(data);
+        setAppointments(data);
+      })
+      .catch((error) => {
+        console.error("Error fetching appointments: ", error);
+      });
+
+    getDoctorDropdown()
+      .then((data) => {
+        // console.log(data);
+        setDoctors(
+          data.map((doctor: any) => ({
+            value: "" + doctor.id,
+            label: doctor.name,
+          }))
+        );
+      })
+      .catch((error) => {
+        console.error("Error fetcching doctors:", error);
+      });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const onGlobalFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    let _filters: any = { ...filters };
+
+    _filters["global"].value = value;
+
+    setFilters(_filters);
+    setGlobalFilterValue(value);
+  };
+
+  const form = useForm({
+    initialValues: {
+      doctorId: "",
+      patientId: user.profileId,
+      appointmentTime: new Date(),
+      reason: "",
+      notes: "",
+    },
+
+    validate: {
+      doctorId: (value: any) => (!value ? "Doctor is required" : undefined),
+      appointmentTime: (value: any) =>
+        !value ? "Appointment time is required" : undefined,
+      reason: (value: any) =>
+        !value ? "Reason for appointment is required" : undefined,
+      // notes:(value) => !value?"Additonal Notes are required":undefined
+    },
+  });
+
+  const renderHeader = () => {
+    return (
+      <div className="flex flex-wrap gap-2 justify-between items-center">
+        <Button leftSection={<IconPlus />} onClick={open} variant="filled">
+          Schedule Appointment
+        </Button>
+
+        <TextInput
+          leftSection={<IconSearch />}
+          fw={500}
+          value={globalFilterValue}
+          onChange={onGlobalFilterChange}
+          placeholder="Keyword Search"
+        />
+      </div>
+    );
+  };
+
+  const statusBodyTemplate = (rowData: Customer) => {
+    return (
+      <Tag value={rowData.status} severity={getSeverity(rowData.status)} />
+    );
+  };
+
+  const handleDelete = (rowData: any) => {
+    modals.openConfirmModal({
+      title: (
+        <span className="text-xl font-serif font-semibold">Are You Sure</span>
+      ),
+      centered: true,
+      children: (
+        <Text size="sm">
+          You want to cancel this Appointment? This action cannot be undone.
+        </Text>
+      ),
+      labels: { confirm: "Confirm", cancel: "Cancel" },
+      onConfirm: () => {
+        cancelAppointment(rowData.id)
+          .then(() => {
+            successNotification("Appointment Cancelled Successfully");
+            setAppointments(
+              appointments.map((appointment) =>
+                appointment.id == rowData.id
+                  ? { ...appointment, status: "CANCELED" }
+                  : appointment
+              )
+            );
+          })
+          .catch((error) => {
+            errorNotification(
+              error.response?.data?.errorMessage ||
+                "Failed to cancel appointment"
+            );
+          });
+      },
+    });
+  };
+
+  const actionBodyTemplate = (rowData: any) => {
+    return (
+      <div className="flex gap-2">
+        <ActionIcon>
+          <IconEdit size={20} stroke={1.5} />
+        </ActionIcon>
+        <ActionIcon color="red" onClick={() => handleDelete(rowData)}>
+          <IconTrash size={20} stroke={1.5} />
+        </ActionIcon>
+      </div>
+    );
+  };
+
+  const header = renderHeader();
+
+  const handleSubmit = (values: any) => {
+    console.log("Values ", values);
+    setLoading(true);
+    scheduleAppointment(values)
+      .then((data) => {
+        close();
+        form.reset();
+        successNotification("Appointment Scheduled Successfully");
+        console.log("Appointment Scheduled Successfully:", data);
+      })
+      .catch((error) => {
+        errorNotification(
+          error.response?.data?.errorMessage || "Failed to Schedule Appointment"
+        );
+        console.log("Error Schedulling Appointment:", error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+
+  const timeTemplate = (rowData: any) => {
+    return <span>{formatDateWithTime(rowData.appointmentTime)}</span>;
+  };
+
+  return (
+    <div className="card">
+      <DataTable
+        value={appointments}
+        size="small"
+        paginator
+        header={header}
+        rows={10}
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+        rowsPerPageOptions={[10, 25, 50]}
+        dataKey="id"
+        
+        filters={filters}
+        filterDisplay="menu"
+        globalFilterFields={[
+          "doctorName",
+          "reason",
+          "notes",
+          "status",
+        ]}
+        emptyMessage="No appointment found."
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+      >
+        {/* <Column
+          selectionMode="multiple"
+          headerStyle={{ width: "3rem" }}
+        ></Column> */}
+        <Column
+          field="doctorName"
+          header="Doctor"
+          sortable
+          filter
+          filterPlaceholder="Search by doctor name"
+          style={{ minWidth: "14rem" }}
+        />
+        <Column
+          field="appointmentTime"
+          header="Appointment Time"
+          sortable
+          style={{ minWidth: "14rem" }}
+          body={timeTemplate}
+        />
+        <Column
+          field="reason"
+          header="Reason"
+          sortable
+          filter
+          filterPlaceholder="Search by doctor name"
+          style={{ minWidth: "14rem" }}
+        />
+        <Column
+          field="notes"
+          header="Notes"
+          sortable
+          filter
+          filterPlaceholder="Search by doctor name"
+          style={{ minWidth: "14rem" }}
+        />
+        <Column
+          field="status"
+          header="Status"
+          sortable
+          filterMenuStyle={{ width: "14rem" }}
+          style={{ minWidth: "12rem" }}
+          body={statusBodyTemplate}
+          filter
+        />
+        <Column
+          headerStyle={{ width: "5rem", textAlign: "center" }}
+          bodyStyle={{ textAlign: "center", overflow: "visible" }}
+          body={actionBodyTemplate}
+        />
+      </DataTable>
+
+      <Modal
+        size="lg"
+        opened={opened}
+        onClose={close}
+        title={
+          <div className="text-xl font-semibold text-primary-500">
+            Schedule Appointment
+          </div>
+        }
+        centered
+      >
+        <LoadingOverlay
+          visible={loading}
+          zIndex={1000}
+          overlayProps={{ radius: "sm", blur: 2 }}
+        />
+        <form
+          onSubmit={form.onSubmit(handleSubmit)}
+          className="grid grid-cols-1 gap-5"
+        >
+          <Select
+            {...form.getInputProps("doctorId")}
+            withAsterisk
+            data={doctors}
+            label="Doctor"
+            title="Select Doctor"
+            placeholder="Select Doctor"
+          ></Select>
+          <DateTimePicker
+            minDate={new Date()}
+            {...form.getInputProps("appointmentTime")}
+            withAsterisk
+            label="Appointment Time"
+            placeholder="Pick Date and time"
+          />
+          <Select
+            {...form.getInputProps("reason")}
+            data={appointmentReasons}
+            withAsterisk
+            label="Reason for Appointment"
+            title="Select Doctor"
+            placeholder="Enter reason for Appointment"
+          />
+          <Textarea
+            {...form.getInputProps("notes")}
+            withAsterisk
+            label="Additional Notes"
+            placeholder="Enter any Additonal notes"
+          />
+          <Button type="submit" variant="filled" fullWidth>
+            Submit
+          </Button>
+        </form>
+      </Modal>
+    </div>
+  );
+};
+
+export default Appointment;

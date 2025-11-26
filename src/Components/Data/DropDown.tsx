@@ -21,10 +21,16 @@ const bloodGroup:Record<string,string> ={
   O_NEGATIVE: "O-" ,
 }
 
+const appointmentReasons = [
+  "Amternity/Parental Checkup",
+  "Pedriatic Consultation",
+  "General Checkup",
+  "Fever"
+]
 
 const doctorSpecializations = ["Cardiologist", "Dermatologist", "Neurologist", "Orthopedic", "Pediatrician", "Psychiatrist", "Gynecologist", "Oncologist", "Radiologist", "Dentist", "ENT Specialist", "Ophthalmologist", "General Surgeon", "Urologist", "Nephrologist", "Endocrinologist", "Gastroenterologist", "Pulmonologist", "Physician"];
 
 const doctorDepartments = ["Cardiology", "Neurology", "Orthopedics", "Pediatrics", "Dermatology", "Psychiatry", "Gynecology", "Oncology", "Radiology", "Dentistry", "ENT", "Ophthalmology", "General Surgery", "Urology", "Nephrology", "Endocrinology", "Gastroenterology", "Pulmonology", "Emergency Medicine", "Anesthesiology", "Pathology"];
 
-export { bloodGroup, bloodGroups, doctorDepartments, doctorSpecializations };
+export { bloodGroup, bloodGroups, doctorDepartments, doctorSpecializations,appointmentReasons };
 

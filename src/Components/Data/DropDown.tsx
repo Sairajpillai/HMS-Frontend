@@ -32,5 +32,84 @@ const doctorSpecializations = ["Cardiologist", "Dermatologist", "Neurologist", "
 
 const doctorDepartments = ["Cardiology", "Neurology", "Orthopedics", "Pediatrics", "Dermatology", "Psychiatry", "Gynecology", "Oncology", "Radiology", "Dentistry", "ENT", "Ophthalmology", "General Surgery", "Urology", "Nephrology", "Endocrinology", "Gastroenterology", "Pulmonology", "Emergency Medicine", "Anesthesiology", "Pathology"];
 
-export { bloodGroup, bloodGroups, doctorDepartments, doctorSpecializations,appointmentReasons };
+const symptoms = [
+  "Fever",
+  "Cough",
+  "Cold",
+  "Headache",
+  "Muscle Pain",
+  "Fatigue",
+  "Sore Throat",
+  "Joint Pain",
+  "Nausea",
+  "Vomiting",
+  "Diarrhea",
+  "Shortness of Breath",
+  "Chest Pain",
+  "Dizziness",
+  "Loss of Appetite",
+  "Runny Nose",
+  "Body Ache",
+  "Back Pain",
+  "Abdominal Pain",
+  "Rash",
+  "Chills",
+  "Sweating",
+  "Weakness",
+  "Anxiety",
+  "Insomnia",
+  "Swelling",
+  "Numbness",
+  "Blurred Vision",
+  "Ear Pain"
+];
+
+const tests = [
+  "Blood Test",
+  "Complete Blood Count (CBC)",
+  "Liver Function Test (LFT)",
+  "Kidney Function Test (KFT)",
+  "Thyroid Function Test (TFT)",
+  "Urine Test",
+  "Blood Sugar (Fasting)",
+  "Blood Sugar (PP)",
+  "HbA1c",
+  "Lipid Profile",
+  "ECG",
+  "X-Ray",
+  "CT Scan",
+  "MRI Scan",
+  "Ultrasound",
+  "Vitamin D Test",
+  "Vitamin B12 Test",
+  "COVID-19 Test",
+  "Dengue Test (NS1/IgG/IgM)",
+  "Malaria Test",
+  "HIV Test",
+  "Pregnancy Test",
+  "Allergy Test",
+  "Stool Test",
+  "Echocardiogram (ECHO)",
+  "Blood Pressure Measurement",
+  "Pulse Oximetry",
+  "Pap Smear",
+  "PSA Test",
+  "Bone Density Test (DEXA)"
+];
+
+const frequencies = [
+  "0-0-0",
+  "0-0-1",
+  "0-1-0",
+  "0-1-1",
+  "1-0-0",
+  "1-0-1",
+  "1-1-0",
+  "1-1-1"
+];
+
+
+
+
+export { bloodGroup, bloodGroups, doctorDepartments, doctorSpecializations,appointmentReasons ,symptoms,tests,frequencies};
 

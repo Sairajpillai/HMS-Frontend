@@ -1,10 +1,24 @@
-import { Badge, Breadcrumbs, Card, Divider, Group, Tabs, Text, Title } from "@mantine/core";
-import { IconClipboardHeart, IconStethoscope, IconVaccine } from "@tabler/icons-react";
+import {
+  Badge,
+  Breadcrumbs,
+  Card,
+  Divider,
+  Group,
+  Tabs,
+  Text,
+  Title,
+} from "@mantine/core";
+import {
+  IconClipboardHeart,
+  IconStethoscope,
+  IconVaccine,
+} from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getAppointmentDetails } from "../../../Service/AppointmentService";
 import { formatDateWithTime } from "../../../Utility/DateUtility";
 import ApReport from "./ApReport";
+import Prescriptions from "./Prescriptions";
 
 const AppointmentDetails = () => {
   const [appointment, setAppointment] = useState<any>({});
@@ -20,7 +34,7 @@ const AppointmentDetails = () => {
       .catch((err) => {
         console.log("Error fetching appointment details:", err);
       });
-  }, []);
+  }, [id]);
 
   return (
     <div>
@@ -68,7 +82,7 @@ const AppointmentDetails = () => {
             {formatDateWithTime(appointment.appointmentTime)}
           </Text>
         </div>
-        
+
         {appointment.notes && (
           <Text mt="sm" color="dimmed" size="sm">
             <strong>Notes:</strong>
@@ -77,31 +91,35 @@ const AppointmentDetails = () => {
         )}
       </Card>
       <Tabs my="mb" variant="pills" defaultValue="mdeical">
-      <Tabs.List>
-        <Tabs.Tab value="medical" leftSection={<IconStethoscope size={20} />}>
-          Medical History
-        </Tabs.Tab>
-        <Tabs.Tab value="prescriptions" leftSection={<IconVaccine size={20} />}>
-          Prescriptions
-        </Tabs.Tab>
-        <Tabs.Tab value="report" leftSection={<IconClipboardHeart size={20} />}>
-          Reports
-        </Tabs.Tab>
-      </Tabs.List>
-      <Divider my="md"/>
+        <Tabs.List>
+          <Tabs.Tab value="medical" leftSection={<IconStethoscope size={20} />}>
+            Medical History
+          </Tabs.Tab>
+          <Tabs.Tab
+            value="prescriptions"
+            leftSection={<IconVaccine size={20} />}
+          >
+            Prescriptions
+          </Tabs.Tab>
+          <Tabs.Tab
+            value="report"
+            leftSection={<IconClipboardHeart size={20} />}
+          >
+            Reports
+          </Tabs.Tab>
+        </Tabs.List>
+        <Divider my="md" />
 
-      <Tabs.Panel value="medical">
-        Medical
-      </Tabs.Panel>
+        <Tabs.Panel value="medical">Medical</Tabs.Panel>
 
-      <Tabs.Panel value="prescriptions">
-        Prescriptions
-      </Tabs.Panel>
+        <Tabs.Panel value="prescriptions">
+          <Prescriptions appointment={appointment} />
+        </Tabs.Panel>
 
-      <Tabs.Panel value="report">
-        <ApReport appointment={appointment}/>
-      </Tabs.Panel>
-    </Tabs>
+        <Tabs.Panel value="report">
+          <ApReport appointment={appointment} />
+        </Tabs.Panel>
+      </Tabs>
     </div>
   );
 };
